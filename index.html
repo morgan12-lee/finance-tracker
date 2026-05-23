@@ -250,29 +250,15 @@ body{padding-bottom:72px;}
         <div class="cwgroup-sum" id="sum-food">小計 — / 10,000</div>
       </div>
 
-      <!-- 固定支出 -->
-      <div class="cwgroup">
-        <div class="cwgroup-title">固定支出 FIXED</div>
-        <div class="env-row">
-          <div><div class="env-name">🏠 房租</div><div class="env-budget">預算 8,000</div></div>
-          <input type="number" class="env-input" id="s-rent" placeholder="0" oninput="updateGroupSum('fixed')">
-        </div>
-        <div class="env-row">
-          <div><div class="env-name">📱 電信費</div><div class="env-budget">預算 750</div></div>
-          <input type="number" class="env-input" id="s-tel" placeholder="0" oninput="updateGroupSum('fixed')">
-        </div>
-        <div class="cwgroup-sum" id="sum-fixed">小計 — / 8,750</div>
-      </div>
-
       <!-- 生活雜支 -->
       <div class="cwgroup">
         <div class="cwgroup-title">生活雜支 LIVING</div>
         <div class="env-row">
-          <div><div class="env-name">💡 水電</div><div class="env-budget">預算 1,000</div></div>
+          <div><div class="env-name">💡 水電</div><div class="env-budget">純記錄</div></div>
           <input type="number" class="env-input" id="s-util" placeholder="0" oninput="updateGroupSum('living')">
         </div>
         <div class="env-row">
-          <div><div class="env-name">🧴 日用品</div><div class="env-budget">預算 1,000</div></div>
+          <div><div class="env-name">🧴 日用品</div><div class="env-budget">純記錄</div></div>
           <input type="number" class="env-input" id="s-daily" placeholder="0" oninput="updateGroupSum('living')">
         </div>
         <div class="env-row">
@@ -280,32 +266,45 @@ body{padding-bottom:72px;}
           <input type="number" class="env-input" id="s-medical" placeholder="0" oninput="updateGroupSum('living')">
         </div>
         <div class="env-row">
-          <div><div class="env-name">🛵 交通（機車）</div><div class="env-budget">預算 800</div></div>
+          <div><div class="env-name">🛵 交通</div><div class="env-budget">純記錄</div></div>
           <input type="number" class="env-input" id="s-moto" placeholder="0" oninput="updateGroupSum('living')">
         </div>
-        <div class="cwgroup-sum" id="sum-living">小計 — / 2,800</div>
+        <div class="env-row">
+          <div><div class="env-name">📱 電信費</div><div class="env-budget">純記錄</div></div>
+          <input type="number" class="env-input" id="s-tel" placeholder="0" oninput="updateGroupSum('living')">
+        </div>
+        <div class="cwgroup-sum" id="sum-living">小計 — / 3,550</div>
       </div>
 
       <!-- 消費娛樂 -->
       <div class="cwgroup">
         <div class="cwgroup-title">消費 · 娛樂 LEISURE</div>
         <div class="env-row">
-          <div><div class="env-name">🎉 娛樂社交</div><div class="env-budget">預算 2,500</div></div>
+          <div><div class="env-name">🎉 娛樂社交</div><div class="env-budget">預算 1,000</div></div>
           <input type="number" class="env-input" id="s-fun" placeholder="0" oninput="updateGroupSum('leisure')">
         </div>
         <div class="env-row">
-          <div><div class="env-name">🛍 購物-想要</div><div class="env-budget">預算 250</div></div>
+          <div><div class="env-name">🛍 想要購物</div><div class="env-budget">預算 250</div></div>
           <input type="number" class="env-input" id="s-shop" placeholder="0" oninput="updateGroupSum('leisure')">
         </div>
+        <div class="cwgroup-sum" id="sum-leisure">小計 — / 1,250</div>
+      </div>
+
+      <!-- 其他 -->
+      <div class="cwgroup">
+        <div class="cwgroup-title">其他 OTHER</div>
         <div class="env-row">
-          <div><div class="env-name">📲 訂閱</div><div class="env-budget">預算 100</div></div>
-          <input type="number" class="env-input" id="s-sub" placeholder="0" oninput="updateGroupSum('leisure')">
+          <div><div class="env-name">🐻 花費</div><div class="env-budget">純記錄</div></div>
+          <input type="number" class="env-input" id="s-bear" placeholder="0" oninput="updateGroupSum('other')">
         </div>
         <div class="env-row">
-          <div><div class="env-name">🐻 🐻花費</div><div class="env-budget">純記錄</div></div>
-          <input type="number" class="env-input" id="s-bear" placeholder="0" oninput="updateGroupSum('leisure')">
+          <div>
+            <input type="text" style="border:none;outline:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;background:transparent;width:120px" id="s-other-label" placeholder="自訂項目名稱">
+            <div class="env-budget">純記錄</div>
+          </div>
+          <input type="number" class="env-input" id="s-other" placeholder="0" oninput="updateGroupSum('other')">
         </div>
-        <div class="cwgroup-sum" id="sum-leisure">小計 — / 2,850</div>
+        <div class="cwgroup-sum" id="sum-other">小計 — · 純記錄</div>
       </div>
 
       <div class="divider" style="margin:10px 0 18px"></div>
@@ -444,19 +443,21 @@ const DEFAULT_DATA = {
     { id:'f1', name:'運動費', target:3000, current:0, type:'recurring', note:'每兩個月一次', deposits:[] },
     { id:'f2', name:'燙髮', target:4800, current:0, type:'once', note:'6月底前', deposits:[] },
     { id:'f3', name:'舞蹈課基金', target:1500, current:0, type:'unlock', note:'存滿才開始上課', deposits:[] },
-    { id:'f4', name:'📚 學習課程', target:0, current:0, type:'once', note:'存滿再報名', deposits:[] }
+    { id:'f4', name:'📚 學習課程', target:0, current:0, type:'once', note:'存滿再報名', deposits:[] },
+    { id:'f5', name:'📲 數位訂閱', target:200, current:0, type:'recurring', note:'每月 200，存滿繳費', deposits:[] }
   ],
   logs: [],
   weeks: 4
 };
 let data, curWeeks = 4;
 
-const BUDGETS = { meal:8000, treat:2000, rent:8000, tel:750, util:1000, daily:1000, medical:0, moto:800, fun:2500, shop:250, sub:100, bear:0 };
+const BUDGETS = { meal:8000, treat:2000, util:0, daily:0, medical:0, moto:0, tel:0, fun:1000, shop:250, bear:0, other:0 };
+const LIVING_BUDGET = 3550;
 const GROUPS = {
-  food:    { fields:['meal','treat'],           budget:10000, label:'飲食' },
-  fixed:   { fields:['rent','tel'],             budget:8750,  label:'固定支出' },
-  living:  { fields:['util','daily','medical','moto'], budget:2800, label:'生活雜支' },
-  leisure: { fields:['fun','shop','sub','bear'], budget:2850, label:'消費娛樂' }
+  food:    { fields:['meal','treat'],                         budget:10000,        label:'飲食' },
+  living:  { fields:['util','daily','medical','moto','tel'], budget:LIVING_BUDGET, label:'生活雜支' },
+  leisure: { fields:['fun','shop'],                         budget:1250,         label:'消費娛樂' },
+  other:   { fields:['bear','other'],                       budget:0,            label:'其他' }
 };
 
 function load() {
@@ -516,10 +517,14 @@ function updateGroupSum(gk) {
   const total = g.fields.reduce((s,f) => s + (+document.getElementById('s-'+f).value||0), 0);
   const el = document.getElementById('sum-' + gk);
   // Only compare against budget for fields that have a budget
-  const budgetedTotal = g.fields.reduce((s,f) => s + (BUDGETS[f]>0 ? (+document.getElementById('s-'+f).value||0) : 0), 0);
-  const budgeted = g.fields.reduce((s,f) => s + (BUDGETS[f]||0), 0);
-  const over = budgeted > 0 && budgetedTotal > budgeted;
-  el.textContent = `小計 ${total.toLocaleString()} / ${budgeted.toLocaleString()}`;
+  // For living group, use fixed LIVING_BUDGET; for others use sum of field budgets
+  const groupBudget = gk === 'living' ? LIVING_BUDGET : g.fields.reduce((s,f) => s + (BUDGETS[f]||0), 0);
+  const over = groupBudget > 0 && total > groupBudget;
+  if (groupBudget > 0) {
+    el.textContent = `小計 ${total.toLocaleString()} / ${groupBudget.toLocaleString()}`;
+  } else {
+    el.textContent = `小計 ${total.toLocaleString()} · 純記錄`;
+  }
   el.style.color = over ? '#c00' : 'var(--fg-3)';
 }
 
@@ -601,26 +606,26 @@ function saveSettle() {
   const overtime = +document.getElementById('s-overtime').value || 0;
   const bonus = +document.getElementById('s-bonus').value || 0;
   const d = {
-    meal:    +document.getElementById('s-meal').value||0,
-    treat:   +document.getElementById('s-treat').value||0,
-    rent:    +document.getElementById('s-rent').value||0,
-    tel:     +document.getElementById('s-tel').value||0,
-    util:    +document.getElementById('s-util').value||0,
-    daily:   +document.getElementById('s-daily').value||0,
-    medical: +document.getElementById('s-medical').value||0,
-    moto:    +document.getElementById('s-moto').value||0,
-    fun:     +document.getElementById('s-fun').value||0,
-    shop:    +document.getElementById('s-shop').value||0,
-    sub:     +document.getElementById('s-sub').value||0,
-    bear:    +document.getElementById('s-bear').value||0,
-    emerg:   +document.getElementById('s-emerg').value||0,
-    dreamDep:+document.getElementById('s-dream-dep').value||0,
-    goal:    +document.getElementById('s-goal').value||0
+    meal:       +document.getElementById('s-meal').value||0,
+    treat:      +document.getElementById('s-treat').value||0,
+    util:       +document.getElementById('s-util').value||0,
+    daily:      +document.getElementById('s-daily').value||0,
+    medical:    +document.getElementById('s-medical').value||0,
+    moto:       +document.getElementById('s-moto').value||0,
+    tel:        +document.getElementById('s-tel').value||0,
+    fun:        +document.getElementById('s-fun').value||0,
+    shop:       +document.getElementById('s-shop').value||0,
+    bear:       +document.getElementById('s-bear').value||0,
+    otherLabel: document.getElementById('s-other-label').value.trim(),
+    other:      +document.getElementById('s-other').value||0,
+    emerg:      +document.getElementById('s-emerg').value||0,
+    dreamDep:   +document.getElementById('s-dream-dep').value||0,
+    goal:       +document.getElementById('s-goal').value||0
   };
   const note = document.getElementById('s-note').value.trim();
   data.logs.push({ id:Date.now().toString(), kind:'settle', date:month+'-09', data:d, note });
   save();
-  ['s-meal','s-treat','s-rent','s-tel','s-util','s-daily','s-medical','s-moto','s-fun','s-shop','s-sub','s-bear','s-emerg','s-dream-dep','s-goal','s-note'].forEach(i=>document.getElementById(i).value='');
+  ['s-meal','s-treat','s-util','s-daily','s-medical','s-moto','s-tel','s-fun','s-shop','s-bear','s-other-label','s-other','s-emerg','s-dream-dep','s-goal','s-note'].forEach(i=>document.getElementById(i).value='');
   Object.keys(GROUPS).forEach(k=>updateGroupSum(k));
   renderLog(); renderHome(); toast('月結算已記錄'); nav('log');
 }
@@ -753,22 +758,21 @@ function renderLog() {
     } else if (l.kind==='settle') {
       kindName='月結算';
       const d=l.data;
-      const totalSpend = (d.meal||0)+(d.treat||0)+(d.rent||0)+(d.tel||0)+(d.util||0)+(d.daily||0)+(d.medical||0)+(d.moto||0)+(d.fun||0)+(d.shop||0)+(d.sub||0)+(d.bear||0);
+      const totalSpend = (d.meal||0)+(d.treat||0)+(d.util||0)+(d.daily||0)+(d.medical||0)+(d.moto||0)+(d.tel||0)+(d.fun||0)+(d.shop||0)+(d.bear||0)+(d.other||0);
       const totalSaved = (d.emerg||0)+(d.dreamDep||0);
       const goalMet = totalSaved >= d.goal && d.goal > 0;
       const mk=(a,b,lbl)=>`<div class="row ${b>0&&a>b?'over':''}"><span>${lbl}</span><span>${a.toLocaleString()}${b>0?' / '+b.toLocaleString():''}</span></div>`;
       body = mk(d.meal,8000,'🍚 三餐-日常')
         + mk(d.treat,2000,'🍰 嘴饞-非必要')
-        + mk(d.rent,8000,'🏠 房租')
-        + mk(d.tel,750,'📱 電信費')
-        + mk(d.util,1000,'💡 水電')
-        + mk(d.daily,1000,'🧴 日用品')
-        + (d.medical?mk(d.medical,0,'💊 醫療'):'')
-        + mk(d.moto,800,'🛵 交通機車')
-        + mk(d.fun,2500,'🎉 娛樂社交')
-        + mk(d.shop,250,'🛍 購物-想要')
-        + mk(d.sub,100,'📲 訂閱')
-        + (d.bear?`<div class="row"><span>🐻 🐻花費</span><span>${d.bear.toLocaleString()}</span></div>`:'')
+        + (d.util?`<div class="row"><span>💡 水電</span><span>${d.util.toLocaleString()}</span></div>`:'')
+        + (d.daily?`<div class="row"><span>🧴 日用品</span><span>${d.daily.toLocaleString()}</span></div>`:'')
+        + (d.medical?`<div class="row"><span>💊 醫療</span><span>${d.medical.toLocaleString()}</span></div>`:'')
+        + (d.moto?`<div class="row"><span>🛵 交通</span><span>${d.moto.toLocaleString()}</span></div>`:'')
+        + (d.tel?`<div class="row"><span>📱 電信費</span><span>${d.tel.toLocaleString()}</span></div>`:'')
+        + mk(d.fun,1000,'🎉 娛樂社交')
+        + mk(d.shop,250,'🛍 想要購物')
+        + (d.bear?`<div class="row"><span>🐻 花費</span><span>${d.bear.toLocaleString()}</span></div>`:'')
+        + (d.other?`<div class="row"><span>${d.otherLabel||'其他'}</span><span>${d.other.toLocaleString()}</span></div>`:'')
         + `<div class="row ${goalMet?'ok':''}"><span>💰 緊急金存入</span><span>${(d.emerg||0).toLocaleString()}</span></div>`
         + `<div class="row"><span>✦ 夢想基金存入</span><span>${(d.dreamDep||0).toLocaleString()}</span></div>`
         + `<div class="row ${goalMet?'ok':''}"><span>目標 / 達成</span><span>${(d.goal||0).toLocaleString()} / ${totalSaved.toLocaleString()} ${goalMet?'✓':''}</span></div>`
