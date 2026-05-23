@@ -1,8 +1,9 @@
 const CACHE = 'ritual-v5';
 const FILES = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/finance-tracker/',
+  '/finance-tracker/index.html',
+  '/finance-tracker/manifest.json',
+  '/finance-tracker/sw.js'
 ];
 
 // 安裝時快取所有檔案
@@ -34,7 +35,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => caches.match('/finance-tracker/index.html'));
     })
   );
 });

@@ -2,7 +2,7 @@
   "name": "財務儀式手帳",
   "short_name": "手帳",
   "description": "四年自由計畫 · 財務儀式記錄",
-  "start_url": "/",
+  "start_url": "/finance-tracker/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0a0a0a",
