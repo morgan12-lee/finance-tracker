@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="手帳">
+<link rel="manifest" href="manifest.json">
+<title>財務儀式手帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#ffffff;--fg:#0a0a0a;--fg-2:#404040;--fg-3:#737373;
+  --fg-4:#a3a3a3;--fg-5:#d4d4d4;--line:#e5e5e5;--line-soft:#f0f0f0;
+  --bg-soft:#fafafa;--bg-mark:#f5f5f5;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--fg);font-family:'Inter','Noto Sans TC',-apple-system,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body{padding-bottom:72px;}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+.wrap{max-width:640px;margin:0 auto;padding:24px 18px 40px;}
+
+.app-head{padding:8px 0 20px;border-bottom:1px solid var(--fg);margin-bottom:24px;}
+.app-title{font-size:20px;font-weight:600;letter-spacing:-0.01em;}
+.app-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--fg-3);margin-top:2px;}
+
+.today-banner{padding:18px;border:1px solid var(--fg);margin-bottom:24px;}
+.today-banner.idle{border-color:var(--line);}
+.tb-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--fg-3);margin-bottom:8px;}
+.tb-title{font-size:17px;font-weight:600;margin-bottom:4px;}
+.tb-desc{font-size:13px;color:var(--fg-2);}
+.tb-btn{margin-top:14px;display:inline-block;}
+
+.section{display:none;}.section.active{display:block;}
+.sec-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+.sec-sub{font-size:12px;color:var(--fg-3);margin-bottom:20px;font-family:'IBM Plex Mono',monospace;}
+
+.card{border:1px solid var(--line);padding:18px;margin-bottom:14px;}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.card-name{font-size:15px;font-weight:500;}
+.card-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-3);letter-spacing:.1em;text-transform:uppercase;}
+
+.field{margin-bottom:14px;}
+.field-label{font-size:12px;color:var(--fg-3);margin-bottom:6px;display:block;font-weight:500;}
+.input,.textarea,select{width:100%;padding:11px 12px;background:var(--bg);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--fg);outline:none;border-radius:0;-webkit-appearance:none;}
+.textarea{font-family:'Inter','Noto Sans TC',sans-serif;resize:vertical;min-height:64px;line-height:1.5;}
+.input:focus,.textarea:focus,select:focus{border-color:var(--fg);}
+.input::placeholder,.textarea::placeholder{color:var(--fg-4);}
+.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* CWMoney group */
+.cwgroup{margin-bottom:18px;}
+.cwgroup-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-3);letter-spacing:.15em;text-transform:uppercase;padding:6px 0 8px;border-bottom:1px solid var(--line-soft);margin-bottom:8px;}
+.cwgroup-sum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fg-3);text-align:right;margin-top:4px;}
+
+.env-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+.env-row:last-child{border-bottom:none;}
+.env-name{font-size:13px;font-weight:500;}
+.env-budget{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-4);}
+.env-over{color:#c00;}
+.env-input{width:100px;padding:8px 10px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;outline:none;}
+.env-input:focus{border-color:var(--fg);}
+
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
+.check-item:last-child{border-bottom:none;}
+.check-box{width:20px;height:20px;border:1px solid var(--fg-3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;margin-top:1px;}
+.check-item.on .check-box{background:var(--fg);border-color:var(--fg);color:var(--bg);}
+.check-label{font-size:14px;}
+.check-item.on .check-label{color:var(--fg-3);}
+
+.btn{padding:12px 20px;background:var(--fg);color:var(--bg);border:1px solid var(--fg);font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-weight:500;}
+.btn:active{opacity:.7;}
+.btn-block{width:100%;}
+.btn-ghost{background:transparent;color:var(--fg-2);border:1px solid var(--line);}
+.btn-sm{padding:8px 14px;font-size:11px;}
+
+.seg{display:flex;border:1px solid var(--fg);margin-bottom:14px;}
+.seg-item{flex:1;padding:10px;text-align:center;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg);}
+.seg-item.on{background:var(--fg);color:var(--bg);}
+.seg-item+.seg-item{border-left:1px solid var(--fg);}
+
+.fund{border:1px solid var(--line);padding:16px;margin-bottom:12px;}
+.fund.done{border-color:var(--fg);background:var(--bg-soft);}
+.fund-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.fund-name{font-size:15px;font-weight:600;}
+.fund-type{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--fg-3);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);padding:2px 6px;}
+.fund-amt{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--fg-2);margin-bottom:10px;}
+.fund-amt b{font-size:17px;color:var(--fg);font-weight:600;}
+.fund-bar{height:3px;background:var(--line);margin-bottom:6px;}
+.fund-fill{height:100%;background:var(--fg);transition:width .6s;}
+.fund-meta{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-3);margin-bottom:12px;}
+.fund-done-mark{font-size:12px;font-weight:600;margin-bottom:10px;}
+.fund-actions{display:flex;gap:8px;align-items:center;}
+.fund-dep-input{flex:1;padding:9px 10px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;}
+.fund-dep-input:focus{border-color:var(--fg);}
+.fund-del{background:none;border:none;color:var(--fg-4);font-size:16px;cursor:pointer;padding:4px 8px;}
+
+.log-entry{border-left:2px solid var(--line);padding:0 0 0 16px;margin-bottom:20px;position:relative;}
+.log-entry::before{content:'';position:absolute;left:-5px;top:4px;width:8px;height:8px;background:var(--fg);border-radius:50%;}
+.log-entry.weekly::before{background:var(--fg-4);border-radius:0;}
+.log-entry.fund-exec::before{background:var(--fg-2);width:8px;height:8px;border-radius:0;transform:rotate(45deg);}
+.log-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fg-3);}
+.log-kind{font-size:13px;font-weight:600;margin:2px 0 8px;}
+.log-body{font-size:13px;color:var(--fg-2);line-height:1.7;}
+.log-body .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--line-soft);}
+.log-body .row span:last-child{font-family:'IBM Plex Mono',monospace;}
+.log-body .row.over span:last-child{color:#c00;}
+.log-body .row.ok span:last-child{color:#3a7d44;}
+.log-note{margin-top:8px;padding:8px 10px;background:var(--bg-mark);font-size:12px;color:var(--fg-2);font-style:italic;}
+.log-del{background:none;border:none;color:var(--fg-4);font-size:13px;cursor:pointer;float:right;font-family:'IBM Plex Mono',monospace;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--fg-4);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.divider{height:1px;background:var(--line);margin:24px 0;}
+.hint{font-size:12px;color:var(--fg-3);line-height:1.6;padding:12px 14px;background:var(--bg-soft);border-left:2px solid var(--fg-5);margin-bottom:18px;}
+
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--fg);display:flex;z-index:50;}
+.nav-item{flex:1;padding:12px 4px 14px;text-align:center;cursor:pointer;border-right:1px solid var(--line);}
+.nav-item:last-child{border-right:none;}
+.nav-icon{font-size:16px;display:block;margin-bottom:3px;filter:grayscale(1);}
+.nav-label{font-size:10px;color:var(--fg-4);}
+.nav-item.active{background:var(--fg);}
+.nav-item.active .nav-label{color:var(--bg);}
+.nav-item.active .nav-icon{filter:grayscale(1) brightness(3);}
+
+.toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--fg);color:var(--bg);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:12px;opacity:0;transition:all .3s;z-index:60;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.stat{border:1px solid var(--line);padding:14px;}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.stat-value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;}
+.stat-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg-3);margin-top:3px;}
+
+.prog-block{margin-bottom:14px;}
+.prog-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.prog-name{font-size:13px;font-weight:500;}
+.prog-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fg-3);}
+.prog-bar{height:3px;background:var(--line);}
+.prog-fill{height:100%;background:var(--fg);transition:width .6s;}
+
+.calc-box{background:var(--bg-soft);padding:12px 14px;margin-bottom:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.calc-box .calc-row{display:flex;justify-content:space-between;padding:2px 0;}
+.calc-box .calc-big{font-size:15px;font-weight:600;border-top:1px solid var(--line);margin-top:4px;padding-top:6px;}
+
+.foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="app-head">
+    <div class="app-title">財務儀式手帳</div>
+    <div class="app-date mono" id="app-date">—</div>
+  </div>
+
+  <!-- HOME -->
+  <section class="section active" id="sec-home">
+    <div class="today-banner" id="today-banner">
+      <div class="tb-tag" id="tb-tag">TODAY</div>
+      <div class="tb-title" id="tb-title">—</div>
+      <div class="tb-desc" id="tb-desc">—</div>
+      <button class="btn btn-sm tb-btn" id="tb-btn" style="display:none">前往記錄</button>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">台銀帳戶餘額</div>
+        <div class="stat-value mono" id="home-bank">NT$ 0</div>
+        <div class="stat-sub" id="home-bank-sub">緊急金 0 + 夢想 0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">夢想基金合計</div>
+        <div class="stat-value mono" id="home-dream">NT$ 0</div>
+        <div class="stat-sub" id="home-dream-sub">—</div>
+      </div>
+    </div>
+
+    <div class="prog-block">
+      <div class="prog-label">
+        <span class="prog-name">🛡 小型緊急金</span>
+        <span class="prog-val" id="emerg-val">0 / 10,000</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="emerg-fill" style="width:0%"></div></div>
+    </div>
+    <div class="prog-block">
+      <div class="prog-label">
+        <span class="prog-name">🏦 完整緊急金</span>
+        <span class="prog-val" id="full-val">0 / 80,000</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="full-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="sec-title" style="margin-top:20px">三個固定儀式</div>
+    <div class="sec-sub">RITUAL SCHEDULE</div>
+    <div class="card"><div class="card-head"><span class="card-name">每週五 · 週檢查</span><span class="card-tag">Weekly</span></div><div style="font-size:13px;color:var(--fg-2)">數本週信封剩多少、看 Debit 卡餘額,記下週要不要縮減。</div></div>
+    <div class="card"><div class="card-head"><span class="card-name">每月 9 號 · 月結算</span><span class="card-tag">Monthly</span></div><div style="font-size:13px;color:var(--fg-2)">CWMoney 對帳、填儲蓄達成(緊急金+夢想基金分開填)。</div></div>
+    <div class="card"><div class="card-head"><span class="card-name">每月 10 號 · 領現金</span><span class="card-tag">Monthly</span></div><div style="font-size:13px;color:var(--fg-2)">領現金、分週信封(4 或 5 包)、確認三筆自動扣繳。</div></div>
+  </section>
+
+  <!-- WEEKLY -->
+  <section class="section" id="sec-weekly">
+    <div class="sec-title">每週五 · 週檢查</div>
+    <div class="sec-sub">WEEKLY CHECK · 5 MIN</div>
+    <div class="hint">數一下本週信封還剩多少鈔票、看 Debit 卡餘額,30 秒搞定。</div>
+    <div class="card">
+      <div class="field"><label class="field-label">檢查日期</label><input type="date" class="input" id="w-date"></div>
+      <div class="field">
+        <label class="field-label">這週用的是第幾包信封?</label>
+        <select id="w-week">
+          <option value="1">第 1 週信封</option>
+          <option value="2">第 2 週信封</option>
+          <option value="3">第 3 週信封</option>
+          <option value="4">第 4 週信封</option>
+          <option value="5">第 5 包(畸零日信封)</option>
+        </select>
+      </div>
+      <div class="field"><label class="field-label">本週信封剩餘現金</label><input type="number" class="input" id="w-env" placeholder="例:850"></div>
+      <div class="field"><label class="field-label">Debit 卡(薪轉戶)餘額</label><input type="number" class="input" id="w-debit" placeholder="0"></div>
+      <div class="field"><label class="field-label">下週要縮減?本週觀察(選填)</label><textarea class="textarea" id="w-note" placeholder="例:嘴饞花太多,下週少買手搖"></textarea></div>
+      <button class="btn btn-block" onclick="saveWeekly()">儲存週檢查</button>
+    </div>
+  </section>
+
+  <!-- MONTHLY -->
+  <section class="section" id="sec-monthly">
+    <div class="sec-title">月度儀式</div>
+    <div class="sec-sub">MONTHLY RITUALS</div>
+
+    <!-- 9號月結算 -->
+    <div class="card">
+      <div class="card-head"><span class="card-name">每月 9 號 · 月結算</span><span class="card-tag">Settle</span></div>
+      <div class="field"><label class="field-label">結算月份</label><input type="month" class="input" id="s-month"></div>
+
+      <div class="hint" style="margin-bottom:14px">對照 CWMoney 月報表填入各子分類實際花費。超預算會標紅。</div>
+
+      <!-- 飲食 -->
+      <div class="cwgroup">
+        <div class="cwgroup-title">飲食 FOOD</div>
+        <div class="env-row">
+          <div><div class="env-name">🍚 三餐-日常</div><div class="env-budget">預算 8,000</div></div>
+          <input type="number" class="env-input" id="s-meal" placeholder="0" oninput="updateGroupSum('food')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🍰 嘴饞-非必要</div><div class="env-budget">預算 2,000</div></div>
+          <input type="number" class="env-input" id="s-treat" placeholder="0" oninput="updateGroupSum('food')">
+        </div>
+        <div class="cwgroup-sum" id="sum-food">小計 — / 10,000</div>
+      </div>
+
+      <!-- 固定支出 -->
+      <div class="cwgroup">
+        <div class="cwgroup-title">固定支出 FIXED</div>
+        <div class="env-row">
+          <div><div class="env-name">🏠 房租</div><div class="env-budget">預算 8,000</div></div>
+          <input type="number" class="env-input" id="s-rent" placeholder="0" oninput="updateGroupSum('fixed')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">📱 電信費</div><div class="env-budget">預算 750</div></div>
+          <input type="number" class="env-input" id="s-tel" placeholder="0" oninput="updateGroupSum('fixed')">
+        </div>
+        <div class="cwgroup-sum" id="sum-fixed">小計 — / 8,750</div>
+      </div>
+
+      <!-- 生活雜支 -->
+      <div class="cwgroup">
+        <div class="cwgroup-title">生活雜支 LIVING</div>
+        <div class="env-row">
+          <div><div class="env-name">💡 水電</div><div class="env-budget">預算 1,000</div></div>
+          <input type="number" class="env-input" id="s-util" placeholder="0" oninput="updateGroupSum('living')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🧴 日用品</div><div class="env-budget">預算 1,000</div></div>
+          <input type="number" class="env-input" id="s-daily" placeholder="0" oninput="updateGroupSum('living')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">💊 醫療</div><div class="env-budget">純記錄</div></div>
+          <input type="number" class="env-input" id="s-medical" placeholder="0" oninput="updateGroupSum('living')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🛵 交通（機車）</div><div class="env-budget">預算 800</div></div>
+          <input type="number" class="env-input" id="s-moto" placeholder="0" oninput="updateGroupSum('living')">
+        </div>
+        <div class="cwgroup-sum" id="sum-living">小計 — / 2,800</div>
+      </div>
+
+      <!-- 消費娛樂 -->
+      <div class="cwgroup">
+        <div class="cwgroup-title">消費 · 娛樂 LEISURE</div>
+        <div class="env-row">
+          <div><div class="env-name">🎉 娛樂社交</div><div class="env-budget">預算 2,500</div></div>
+          <input type="number" class="env-input" id="s-fun" placeholder="0" oninput="updateGroupSum('leisure')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🛍 購物-想要</div><div class="env-budget">預算 250</div></div>
+          <input type="number" class="env-input" id="s-shop" placeholder="0" oninput="updateGroupSum('leisure')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">📲 訂閱</div><div class="env-budget">預算 100</div></div>
+          <input type="number" class="env-input" id="s-sub" placeholder="0" oninput="updateGroupSum('leisure')">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🐻 🐻花費</div><div class="env-budget">純記錄</div></div>
+          <input type="number" class="env-input" id="s-bear" placeholder="0" oninput="updateGroupSum('leisure')">
+        </div>
+        <div class="cwgroup-sum" id="sum-leisure">小計 — / 2,850</div>
+      </div>
+
+      <div class="divider" style="margin:10px 0 18px"></div>
+
+      <div class="field-pair">
+        <div class="field">
+          <label class="field-label">💰 緊急金 存入台銀</label>
+          <input type="number" class="input" id="s-emerg" placeholder="0">
+        </div>
+        <div class="field">
+          <label class="field-label">✦ 夢想基金 存入台銀</label>
+          <input type="number" class="input" id="s-dream-dep" placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">本月儲蓄目標(選填)</label>
+        <input type="number" class="input" id="s-goal" placeholder="例:7000">
+      </div>
+      <div class="field">
+        <label class="field-label">檢討備註(選填)</label>
+        <textarea class="textarea" id="s-note" placeholder="哪項超支?為什麼?下個月調整什麼?外食多還是自煮多?"></textarea>
+      </div>
+      <button class="btn btn-block" onclick="saveSettle()">儲存月結算</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 10號領現金 -->
+    <div class="card">
+      <div class="card-head"><span class="card-name">每月 10 號 · 領現金</span><span class="card-tag">Reset</span></div>
+      <div class="field"><label class="field-label">執行日期</label><input type="date" class="input" id="c-date"></div>
+
+      <!-- 收入 -->
+      <div class="cwgroup" style="margin-bottom:18px">
+        <div class="cwgroup-title">本月收入 INCOME</div>
+        <div class="env-row">
+          <div><div class="env-name">💼 底薪(稅後)</div><div class="env-budget">固定 46,107</div></div>
+          <input type="number" class="env-input" id="s-base" placeholder="46107" oninput="updateIncomeCalc()">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">⏱ 加班費</div><div class="env-budget">浮動 / 估 3,000</div></div>
+          <input type="number" class="env-input" id="s-overtime" placeholder="0" oninput="updateIncomeCalc()">
+        </div>
+        <div class="env-row">
+          <div><div class="env-name">🎁 獎金 / 其他</div><div class="env-budget">端午 6月 · 中秋 9月</div></div>
+          <input type="number" class="env-input" id="s-bonus" placeholder="0" oninput="updateIncomeCalc()">
+        </div>
+      </div>
+
+      <!-- 自動扣繳計算 -->
+      <div class="calc-box" id="income-calc" style="margin-bottom:18px">
+        <div class="calc-row"><span>本月收入</span><span id="ic-total">—</span></div>
+        <div class="calc-row"><span>－ 債協</span><span>9,000</span></div>
+        <div class="calc-row"><span>－ 中租</span><span>4,500</span></div>
+        <div class="calc-row"><span>－ 保險</span><span>3,200</span></div>
+        <div class="calc-row"><span>－ 房租轉固定費專戶</span><span>8,000</span></div>
+        <div class="calc-row calc-big"><span>剩餘可分配</span><span id="ic-remain">—</span></div>
+        <div class="calc-row" style="margin-top:4px;color:var(--fg-3)"><span>其中領現金</span><span id="ic-cash-ref">13,500</span></div>
+        <div class="calc-row" style="color:var(--fg-3)"><span>Debit 卡生活費</span><span id="ic-debit-ref">—</span></div>
+        <div class="calc-row" style="color:var(--fg-3)"><span>建議存入儲蓄戶</span><span id="ic-save-ref">—</span></div>
+      </div>
+      <div class="field">
+        <label class="field-label">這個月要分幾包信封?</label>
+        <div class="seg">
+          <div class="seg-item on" id="seg4" onclick="setWeeks(4)">4 包(整月 4 週)</div>
+          <div class="seg-item" id="seg5" onclick="setWeeks(5)">5 包(含畸零日)</div>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">領現金總額</label><input type="number" class="input" id="c-cash" value="13500" oninput="calcEnv()"></div>
+      <div class="calc-box" id="calc-box"></div>
+      <label class="field-label">三筆自動扣繳 · 確認完成</label>
+      <div style="margin-bottom:14px">
+        <div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">債協扣款 9,000 已確認</div></div>
+        <div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">中租扣款 4,500 已確認</div></div>
+        <div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">保險扣款 3,200 已確認</div></div>
+        <div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">房租 8,000 已轉固定費專戶</div></div>
+      </div>
+      <label class="field-label">信封 · 重設完成</label>
+      <div style="margin-bottom:14px" id="env-checks"></div>
+      <div class="field"><label class="field-label">備註(選填)</label><textarea class="textarea" id="c-note" placeholder="例:這個月有生日聚餐,娛樂多準備一點"></textarea></div>
+      <button class="btn btn-block" onclick="saveCash()">儲存領現金記錄</button>
+    </div>
+  </section>
+
+  <!-- DREAM -->
+  <section class="section" id="sec-dream">
+    <div class="sec-title">夢想基金</div>
+    <div class="sec-sub">SINKING FUNDS</div>
+    <div class="hint">存滿後按「已執行」,台銀帳戶餘額會自動扣除,日誌會記錄這筆花費。</div>
+    <div id="fund-list"></div>
+    <div class="card" style="border-style:dashed">
+      <div class="card-head"><span class="card-name">+ 新增夢想基金</span></div>
+      <div class="field"><label class="field-label">名稱</label><input type="text" class="input" id="f-name" placeholder="例:旅行基金"></div>
+      <div class="field-pair">
+        <div class="field"><label class="field-label">目標金額</label><input type="number" class="input" id="f-target" placeholder="3000"></div>
+        <div class="field"><label class="field-label">類型</label>
+          <select id="f-type">
+            <option value="once">一次性</option>
+            <option value="recurring">循環(定期重複)</option>
+            <option value="unlock">解鎖型(存滿才開始)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">目標日期 / 備註(選填)</label><input type="text" class="input" id="f-note" placeholder="例:6月底前"></div>
+      <button class="btn btn-block" onclick="addFund()">新增基金</button>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section class="section" id="sec-log">
+    <div class="sec-title">完整日誌</div>
+    <div class="sec-sub">FULL HISTORY</div>
+    <div id="log-list"></div>
+    <div class="foot">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">匯出備份</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('imp').click()">匯入</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetAll()" style="color:var(--fg-3)">重設</button>
+      <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </section>
+</div>
+
+<nav class="nav">
+  <div class="nav-item active" data-sec="home" onclick="nav('home')"><span class="nav-icon">⌂</span><span class="nav-label">今日</span></div>
+  <div class="nav-item" data-sec="weekly" onclick="nav('weekly')"><span class="nav-icon">▦</span><span class="nav-label">週檢</span></div>
+  <div class="nav-item" data-sec="monthly" onclick="nav('monthly')"><span class="nav-icon">◷</span><span class="nav-label">月儀式</span></div>
+  <div class="nav-item" data-sec="dream" onclick="nav('dream')"><span class="nav-icon">✦</span><span class="nav-label">夢想</span></div>
+  <div class="nav-item" data-sec="log" onclick="nav('log')"><span class="nav-icon">≣</span><span class="nav-label">日誌</span></div>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'morgan-ritual-v3';
+const DEFAULT_DATA = {
+  funds: [
+    { id:'f1', name:'運動費', target:3000, current:0, type:'recurring', note:'每兩個月一次', deposits:[] },
+    { id:'f2', name:'燙髮', target:4800, current:0, type:'once', note:'6月底前', deposits:[] },
+    { id:'f3', name:'舞蹈課基金', target:1500, current:0, type:'unlock', note:'存滿才開始上課', deposits:[] },
+    { id:'f4', name:'📚 學習課程', target:0, current:0, type:'once', note:'存滿再報名', deposits:[] }
+  ],
+  logs: [],
+  weeks: 4
+};
+let data, curWeeks = 4;
+
+const BUDGETS = { meal:8000, treat:2000, rent:8000, tel:750, util:1000, daily:1000, medical:0, moto:800, fun:2500, shop:250, sub:100, bear:0 };
+const GROUPS = {
+  food:    { fields:['meal','treat'],           budget:10000, label:'飲食' },
+  fixed:   { fields:['rent','tel'],             budget:8750,  label:'固定支出' },
+  living:  { fields:['util','daily','medical','moto'], budget:2800, label:'生活雜支' },
+  leisure: { fields:['fun','shop','sub','bear'], budget:2850, label:'消費娛樂' }
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    if (!data.funds) data.funds = [];
+    if (!data.logs) data.logs = [];
+    if (!data.weeks) data.weeks = 4;
+    curWeeks = data.weeks;
+  } catch { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+function nav(sec) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + sec).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.sec === sec));
+  window.scrollTo(0, 0);
+}
+function toggleChk(el) { el.classList.toggle('on'); }
+function fmtDate(d) {
+  const wk = ['日','一','二','三','四','五','六'];
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 週${wk[d.getDay()]}`;
+}
+
+// Income calc (on 領現金 page)
+const AUTO_DEDUCT = 9000 + 4500 + 3200 + 8000; // 債協+中租+保險+房租
+const CASH_AMT = 13500;
+const DEBIT_LIFE = 750 + 100; // 電信+訂閱 (固定費裡Debit付的部分)
+
+function updateIncomeCalc() {
+  const base = +document.getElementById('s-base').value || 0;
+  const ot = +document.getElementById('s-overtime').value || 0;
+  const bonus = +document.getElementById('s-bonus').value || 0;
+  const total = base + ot + bonus;
+  const remain = total - AUTO_DEDUCT;
+  const debitLife = remain > CASH_AMT ? DEBIT_LIFE : 0;
+  const toSave = remain > 0 ? remain - CASH_AMT - debitLife : 0;
+
+  document.getElementById('ic-total').textContent = total > 0 ? 'NT$ ' + total.toLocaleString() : '—';
+  document.getElementById('ic-remain').textContent = total > 0 ? 'NT$ ' + remain.toLocaleString() : '—';
+  document.getElementById('ic-cash-ref').textContent = 'NT$ ' + CASH_AMT.toLocaleString();
+  document.getElementById('ic-debit-ref').textContent = total > 0 ? 'NT$ ' + debitLife.toLocaleString() : '—';
+  document.getElementById('ic-save-ref').textContent = total > 0 && toSave > 0 ? 'NT$ ' + toSave.toLocaleString() : '—';
+  // also sync to s-goal hint in settle
+  if (total > 0) document.getElementById('c-cash').value = CASH_AMT;
+}
+
+// Group sums
+function updateGroupSum(gk) {
+  const g = GROUPS[gk];
+  const total = g.fields.reduce((s,f) => s + (+document.getElementById('s-'+f).value||0), 0);
+  const el = document.getElementById('sum-' + gk);
+  // Only compare against budget for fields that have a budget
+  const budgetedTotal = g.fields.reduce((s,f) => s + (BUDGETS[f]>0 ? (+document.getElementById('s-'+f).value||0) : 0), 0);
+  const budgeted = g.fields.reduce((s,f) => s + (BUDGETS[f]||0), 0);
+  const over = budgeted > 0 && budgetedTotal > budgeted;
+  el.textContent = `小計 ${total.toLocaleString()} / ${budgeted.toLocaleString()}`;
+  el.style.color = over ? '#c00' : 'var(--fg-3)';
+}
+
+// Envelope calc
+function setWeeks(n) {
+  curWeeks = n; data.weeks = n; save();
+  document.getElementById('seg4').classList.toggle('on', n===4);
+  document.getElementById('seg5').classList.toggle('on', n===5);
+  calcEnv();
+}
+function calcEnv() {
+  const total = +document.getElementById('c-cash').value || 0;
+  const box = document.getElementById('calc-box');
+  const checks = document.getElementById('env-checks');
+  let h = '';
+  if (curWeeks === 4) {
+    const per = Math.round(total / 4 / 25) * 25;
+    box.innerHTML = `<div class="calc-row"><span>領現金總額</span><span>${total.toLocaleString()}</span></div><div class="calc-row"><span>÷ 4 包</span><span>每包 ${per.toLocaleString()}</span></div><div class="calc-row calc-big"><span>每週信封</span><span>NT$ ${per.toLocaleString()}</span></div>`;
+    for (let i=1;i<=4;i++) h += `<div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">第 ${i} 週信封放入 ${per.toLocaleString()}</div></div>`;
+  } else {
+    const per = Math.round(total * 0.75 / 4 / 25) * 25;
+    const zero = total - per * 4;
+    box.innerHTML = `<div class="calc-row"><span>領現金總額</span><span>${total.toLocaleString()}</span></div><div class="calc-row"><span>4 整週信封</span><span>每包 ${per.toLocaleString()}</span></div><div class="calc-row"><span>第 5 包(畸零日)</span><span>${zero.toLocaleString()}</span></div><div class="calc-row calc-big"><span>合計</span><span>NT$ ${total.toLocaleString()}</span></div>`;
+    for (let i=1;i<=4;i++) h += `<div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">第 ${i} 週信封放入 ${per.toLocaleString()}</div></div>`;
+    h += `<div class="check-item" onclick="toggleChk(this)"><div class="check-box">✓</div><div class="check-label">第 5 包(畸零日)放入 ${zero.toLocaleString()}</div></div>`;
+  }
+  checks.innerHTML = h;
+}
+
+// Today banner
+function updateToday() {
+  const now = new Date();
+  document.getElementById('app-date').textContent = fmtDate(now);
+  const day = now.getDate(), dow = now.getDay();
+  const banner = document.getElementById('today-banner');
+  const tag=document.getElementById('tb-tag'),title=document.getElementById('tb-title');
+  const desc=document.getElementById('tb-desc'),btn=document.getElementById('tb-btn');
+  btn.style.display='none'; banner.classList.remove('idle');
+  if (day===10) { tag.textContent='TODAY · 月度儀式'; title.textContent='今天是 10 號 — 領現金日'; desc.textContent='領現金、分週信封、確認三筆自動扣繳。'; btn.style.display='inline-block'; btn.onclick=()=>nav('monthly'); }
+  else if (day===9) { tag.textContent='TODAY · 月度儀式'; title.textContent='今天是 9 號 — 月結算日'; desc.textContent='CWMoney 對帳,填儲蓄緊急金+夢想基金達成金額。'; btn.style.display='inline-block'; btn.onclick=()=>nav('monthly'); }
+  else if (dow===5) { tag.textContent='TODAY · 週檢查'; title.textContent='今天是週五 — 週檢查日'; desc.textContent='數一下本週信封餘額、看 Debit 卡餘額,30 秒搞定。'; btn.style.display='inline-block'; btn.onclick=()=>nav('weekly'); }
+  else { banner.classList.add('idle'); tag.textContent='TODAY'; const toFri=(5-dow+7)%7||7; title.textContent='今天沒有排定儀式'; desc.textContent=`還有 ${toFri} 天到週五檢查${day<9?' · '+(9-day)+' 天到月結算':''}。`; }
+}
+
+// Savings calculations from logs
+function calcSavings() {
+  let emerg = 0, dreamDeposited = 0, dreamSpent = 0;
+  data.logs.forEach(l => {
+    if (l.kind === 'settle') {
+      emerg += (l.data.emerg || 0);
+      dreamDeposited += (l.data.dreamDep || 0);
+    }
+    if (l.kind === 'fund-exec') {
+      dreamSpent += (l.data.amount || 0);
+    }
+  });
+  const dreamNet = dreamDeposited - dreamSpent;
+  return { emerg, dreamDeposited, dreamSpent, dreamNet, total: emerg + dreamNet };
+}
+
+// Weekly
+function saveWeekly() {
+  const date = document.getElementById('w-date').value;
+  if (!date) { toast('請選擇日期'); return; }
+  const week = document.getElementById('w-week').value;
+  const env = +document.getElementById('w-env').value||0;
+  const debit = +document.getElementById('w-debit').value||0;
+  const note = document.getElementById('w-note').value.trim();
+  data.logs.push({ id:Date.now().toString(), kind:'weekly', date, data:{week,env,debit}, note });
+  save(); ['w-env','w-debit','w-note'].forEach(i=>document.getElementById(i).value='');
+  renderLog(); toast('週檢查已記錄'); nav('log');
+}
+
+// Settle
+function saveSettle() {
+  const month = document.getElementById('s-month').value;
+  if (!month) { toast('請選擇月份'); return; }
+  const base = +document.getElementById('s-base').value || 0;
+  const overtime = +document.getElementById('s-overtime').value || 0;
+  const bonus = +document.getElementById('s-bonus').value || 0;
+  const d = {
+    meal:    +document.getElementById('s-meal').value||0,
+    treat:   +document.getElementById('s-treat').value||0,
+    rent:    +document.getElementById('s-rent').value||0,
+    tel:     +document.getElementById('s-tel').value||0,
+    util:    +document.getElementById('s-util').value||0,
+    daily:   +document.getElementById('s-daily').value||0,
+    medical: +document.getElementById('s-medical').value||0,
+    moto:    +document.getElementById('s-moto').value||0,
+    fun:     +document.getElementById('s-fun').value||0,
+    shop:    +document.getElementById('s-shop').value||0,
+    sub:     +document.getElementById('s-sub').value||0,
+    bear:    +document.getElementById('s-bear').value||0,
+    emerg:   +document.getElementById('s-emerg').value||0,
+    dreamDep:+document.getElementById('s-dream-dep').value||0,
+    goal:    +document.getElementById('s-goal').value||0
+  };
+  const note = document.getElementById('s-note').value.trim();
+  data.logs.push({ id:Date.now().toString(), kind:'settle', date:month+'-09', data:d, note });
+  save();
+  ['s-meal','s-treat','s-rent','s-tel','s-util','s-daily','s-medical','s-moto','s-fun','s-shop','s-sub','s-bear','s-emerg','s-dream-dep','s-goal','s-note'].forEach(i=>document.getElementById(i).value='');
+  Object.keys(GROUPS).forEach(k=>updateGroupSum(k));
+  renderLog(); renderHome(); toast('月結算已記錄'); nav('log');
+}
+
+// Cash
+function saveCash() {
+  const date = document.getElementById('c-date').value;
+  if (!date) { toast('請選擇日期'); return; }
+  const base = +document.getElementById('s-base').value || 0;
+  const overtime = +document.getElementById('s-overtime').value || 0;
+  const bonus = +document.getElementById('s-bonus').value || 0;
+  const cash = +document.getElementById('c-cash').value || 0;
+  const note = document.getElementById('c-note').value.trim();
+  const checks = document.querySelectorAll('#sec-monthly .check-item');
+  let doneCount = 0;
+  checks.forEach(c => { if (c.classList.contains('on')) doneCount++; });
+  const total = base + overtime + bonus;
+  const remain = total > 0 ? total - AUTO_DEDUCT : 0;
+  data.logs.push({
+    id: Date.now().toString(), kind: 'cash', date,
+    data: { base, overtime, bonus, totalIncome: total, remain, cash, weeks: curWeeks, doneCount, total: checks.length },
+    note
+  });
+  save();
+  document.getElementById('c-date').value = '';
+  document.getElementById('c-note').value = '';
+  document.getElementById('s-base').value = '';
+  document.getElementById('s-overtime').value = '';
+  document.getElementById('s-bonus').value = '';
+  checks.forEach(c => c.classList.remove('on'));
+  updateIncomeCalc();
+  renderLog(); toast('領現金記錄已儲存'); nav('log');
+}
+
+// Funds
+function renderFunds() {
+  const list = document.getElementById('fund-list');
+  if (!data.funds.length) { list.innerHTML='<div class="empty">還沒有夢想基金</div>'; return; }
+  const tl = { once:'一次性', recurring:'循環', unlock:'解鎖型' };
+  list.innerHTML = data.funds.map(f => {
+    const pct = Math.min(100, Math.round((f.current/f.target)*100));
+    const done = f.current >= f.target;
+    let dm = '';
+    if (done) {
+      if (f.type==='unlock') dm='✦ 存滿了 — 可以開始了!';
+      else if (f.type==='recurring') dm='✦ 存滿了 — 可執行後歸零再存';
+      else dm='✦ 存滿了 — 可以執行!';
+    }
+    return `<div class="fund ${done?'done':''}">
+      <div class="fund-top"><span class="fund-name">${f.name}</span><span class="fund-type">${tl[f.type]||''}</span></div>
+      <div class="fund-amt"><b>NT$ ${f.current.toLocaleString()}</b> / ${f.target.toLocaleString()}</div>
+      <div class="fund-bar"><div class="fund-fill" style="width:${pct}%"></div></div>
+      <div class="fund-meta"><span>${pct}%</span><span>${f.note||''}</span></div>
+      ${done?`<div class="fund-done-mark">${dm}</div>`:''}
+      <div class="fund-actions">
+        <input type="number" class="fund-dep-input" id="dep-${f.id}" placeholder="存入金額">
+        <button class="btn btn-sm" onclick="depositFund('${f.id}')">存入</button>
+        ${done?`<button class="btn btn-sm btn-ghost" onclick="execFund('${f.id}')">已執行</button>`:''}
+        <button class="fund-del" onclick="delFund('${f.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function depositFund(id) {
+  const f = data.funds.find(x=>x.id===id);
+  if (!f) return;
+  const inp = document.getElementById('dep-'+id);
+  const amt = +inp.value;
+  if (!amt||amt<=0) { toast('請輸入金額'); return; }
+  const wasDone = f.current >= f.target;
+  f.current += amt;
+  f.deposits.push({ date:new Date().toISOString().slice(0,10), amount:amt });
+  save(); renderFunds(); renderHome();
+  if (!wasDone && f.current>=f.target) toast('✦ '+f.name+' 存滿了!');
+  else toast('已存入 NT$ '+amt.toLocaleString());
+}
+
+function execFund(id) {
+  const f = data.funds.find(x=>x.id===id);
+  if (!f) return;
+  const msg = f.type==='recurring'
+    ? `「${f.name}」標記為已執行 NT$ ${f.current.toLocaleString()}，台銀餘額會減少這筆,並歸零等下一輪。確定嗎?`
+    : `「${f.name}」標記為已執行 NT$ ${f.current.toLocaleString()}，台銀餘額會減少這筆。確定嗎?`;
+  if (!confirm(msg)) return;
+  const amount = f.current;
+  // Log the execution — this will deduct from savings in calcSavings()
+  data.logs.push({
+    id: Date.now().toString(), kind:'fund-exec',
+    date: new Date().toISOString().slice(0,10),
+    data: { name:f.name, amount, type:f.type }, note:''
+  });
+  f.current = 0;
+  f.deposits = [];
+  save(); renderFunds(); renderHome(); renderLog();
+  toast(`✦ ${f.name} 已執行,台銀 -${amount.toLocaleString()}`);
+}
+
+function addFund() {
+  const name = document.getElementById('f-name').value.trim();
+  const target = +document.getElementById('f-target').value;
+  const type = document.getElementById('f-type').value;
+  const note = document.getElementById('f-note').value.trim();
+  if (!name||!target||target<=0) { toast('請填名稱和目標金額'); return; }
+  data.funds.push({ id:'f'+Date.now(), name, target, current:0, type, note, deposits:[] });
+  save();
+  ['f-name','f-target','f-note'].forEach(i=>document.getElementById(i).value='');
+  renderFunds(); toast('已新增「'+name+'」');
+}
+
+function delFund(id) {
+  const f = data.funds.find(x=>x.id===id);
+  if (!f) return;
+  if (!confirm(`刪除夢想基金「${f.name}」?`)) return;
+  data.funds = data.funds.filter(x=>x.id!==id);
+  save(); renderFunds(); renderHome();
+}
+
+// Log
+function renderLog() {
+  const list = document.getElementById('log-list');
+  if (!data.logs.length) { list.innerHTML='<div class="empty">還沒有任何記錄<br>完成第一個儀式後會出現在這裡</div>'; return; }
+  const sorted = [...data.logs].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  list.innerHTML = sorted.map(l => {
+    let kindName='', body='', cls='';
+    if (l.kind==='weekly') {
+      kindName='週檢查'; cls='weekly';
+      const d=l.data, wk=d.week==='5'?'第 5 包(畸零日)':'第 '+d.week+' 週';
+      body=`<div class="row"><span>使用信封</span><span>${wk}</span></div><div class="row"><span>信封剩餘</span><span>${d.env.toLocaleString()}</span></div><div class="row"><span>Debit 卡餘額</span><span>${d.debit.toLocaleString()}</span></div>`;
+    } else if (l.kind==='settle') {
+      kindName='月結算';
+      const d=l.data;
+      const totalSpend = (d.meal||0)+(d.treat||0)+(d.rent||0)+(d.tel||0)+(d.util||0)+(d.daily||0)+(d.medical||0)+(d.moto||0)+(d.fun||0)+(d.shop||0)+(d.sub||0)+(d.bear||0);
+      const totalSaved = (d.emerg||0)+(d.dreamDep||0);
+      const goalMet = totalSaved >= d.goal && d.goal > 0;
+      const mk=(a,b,lbl)=>`<div class="row ${b>0&&a>b?'over':''}"><span>${lbl}</span><span>${a.toLocaleString()}${b>0?' / '+b.toLocaleString():''}</span></div>`;
+      body = mk(d.meal,8000,'🍚 三餐-日常')
+        + mk(d.treat,2000,'🍰 嘴饞-非必要')
+        + mk(d.rent,8000,'🏠 房租')
+        + mk(d.tel,750,'📱 電信費')
+        + mk(d.util,1000,'💡 水電')
+        + mk(d.daily,1000,'🧴 日用品')
+        + (d.medical?mk(d.medical,0,'💊 醫療'):'')
+        + mk(d.moto,800,'🛵 交通機車')
+        + mk(d.fun,2500,'🎉 娛樂社交')
+        + mk(d.shop,250,'🛍 購物-想要')
+        + mk(d.sub,100,'📲 訂閱')
+        + (d.bear?`<div class="row"><span>🐻 🐻花費</span><span>${d.bear.toLocaleString()}</span></div>`:'')
+        + `<div class="row ${goalMet?'ok':''}"><span>💰 緊急金存入</span><span>${(d.emerg||0).toLocaleString()}</span></div>`
+        + `<div class="row"><span>✦ 夢想基金存入</span><span>${(d.dreamDep||0).toLocaleString()}</span></div>`
+        + `<div class="row ${goalMet?'ok':''}"><span>目標 / 達成</span><span>${(d.goal||0).toLocaleString()} / ${totalSaved.toLocaleString()} ${goalMet?'✓':''}</span></div>`
+        + `<div class="row"><span>本月總支出</span><span>${totalSpend.toLocaleString()}</span></div>`;
+    } else if (l.kind==='cash') {
+      kindName='領現金 · 信封重設';
+      const d=l.data;
+      body = (d.totalIncome ? `<div class="row ok"><span>本月總收入</span><span>${d.totalIncome.toLocaleString()}</span></div>` : '')
+        + (d.base ? `<div class="row"><span>└ 底薪</span><span>${d.base.toLocaleString()}</span></div>` : '')
+        + (d.overtime ? `<div class="row"><span>└ 加班費</span><span>${d.overtime.toLocaleString()}</span></div>` : '')
+        + (d.bonus ? `<div class="row"><span>└ 獎金</span><span>${d.bonus.toLocaleString()}</span></div>` : '')
+        + (d.remain ? `<div class="row ok"><span>扣除自動扣繳後</span><span>${d.remain.toLocaleString()}</span></div>` : '')
+        + `<div class="row"><span>領現金金額</span><span>${d.cash.toLocaleString()}</span></div>`
+        + `<div class="row"><span>信封包數</span><span>${d.weeks||4} 包</span></div>`
+        + `<div class="row"><span>確認項目完成</span><span>${d.doneCount} / ${d.total}</span></div>`;
+    } else if (l.kind==='fund-exec') {
+      kindName='✦ 夢想基金已執行'; cls='fund-exec';
+      body=`<div class="row"><span>${l.data.name}</span><span>-${l.data.amount.toLocaleString()}</span></div><div class="row"><span>台銀帳戶</span><span>已自動扣除</span></div>`;
+    }
+    return `<div class="log-entry ${cls}">
+      <button class="log-del" onclick="delLog('${l.id}')">刪除</button>
+      <div class="log-date mono">${l.date}</div>
+      <div class="log-kind">${kindName}</div>
+      <div class="log-body">${body}</div>
+      ${l.note?`<div class="log-note">${l.note}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function delLog(id) {
+  if (!confirm('刪除這筆記錄?')) return;
+  data.logs = data.logs.filter(l=>l.id!==id);
+  save(); renderLog(); renderHome();
+}
+
+// Home
+function renderHome() {
+  const sv = calcSavings();
+  document.getElementById('home-bank').textContent = 'NT$ ' + sv.total.toLocaleString();
+  document.getElementById('home-bank-sub').textContent = `緊急金 ${sv.emerg.toLocaleString()} + 夢想 ${sv.dreamNet.toLocaleString()}`;
+  const dreamTotal = data.funds.reduce((s,f)=>s+f.current,0);
+  document.getElementById('home-dream').textContent = 'NT$ ' + dreamTotal.toLocaleString();
+  const fundNames = data.funds.filter(f=>f.current>0).map(f=>`${f.name} ${Math.round(f.current/f.target*100)}%`).join(' · ');
+  document.getElementById('home-dream-sub').textContent = fundNames || '尚無進行中的基金';
+
+  const epct = Math.min(100, Math.round((sv.emerg/10000)*100));
+  document.getElementById('emerg-fill').style.width = epct + '%';
+  document.getElementById('emerg-val').textContent = `${sv.emerg.toLocaleString()} / 10,000`;
+  const fpct = Math.min(100, Math.round((sv.emerg/80000)*100));
+  document.getElementById('full-fill').style.width = fpct + '%';
+  document.getElementById('full-val').textContent = `${sv.emerg.toLocaleString()} / 80,000`;
+}
+
+// Import/Export
+function exportData() {
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`ritual-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url); toast('備份已下載');
+}
+function importData(e) {
+  const file=e.target.files[0]; if (!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try {
+      const imp=JSON.parse(ev.target.result);
+      if (confirm('匯入會覆蓋目前所有資料,確定?')) {
+        data={...DEFAULT_DATA,...imp};
+        if (!data.funds) data.funds=[];
+        if (!data.logs) data.logs=[];
+        if (!data.weeks) data.weeks=4;
+        curWeeks=data.weeks; save(); initRender(); toast('匯入完成');
+      }
+    } catch { toast('檔案格式錯誤'); }
+  };
+  r.readAsText(file);
+}
+function resetAll() {
+  if (!confirm('清空所有記錄和夢想基金?')) return;
+  if (!confirm('再確認一次:這個動作無法復原。')) return;
+  data=JSON.parse(JSON.stringify(DEFAULT_DATA)); curWeeks=4;
+  save(); initRender(); toast('已重設');
+}
+
+function setDefaultDates() {
+  const today=new Date().toISOString().slice(0,10);
+  const month=today.slice(0,7);
+  if(document.getElementById('w-date')) document.getElementById('w-date').value=today;
+  if(document.getElementById('c-date')) document.getElementById('c-date').value=today;
+  if(document.getElementById('s-month')) document.getElementById('s-month').value=month;
+}
+
+function initRender() {
+  updateToday(); renderFunds(); renderLog(); renderHome(); setDefaultDates();
+  document.getElementById('seg4').classList.toggle('on', curWeeks===4);
+  document.getElementById('seg5').classList.toggle('on', curWeeks===5);
+  calcEnv(); Object.keys(GROUPS).forEach(k=>updateGroupSum(k));
+}
+
+load(); initRender();
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
