@@ -462,12 +462,32 @@ const GROUPS = {
 
 function load() {
   try {
-    const raw = localStorage.getItem(KEY);
+    // Try loading from stable key first
+    let raw = localStorage.getItem(KEY);
+
+    // If not found, migrate from any old key
+    if (!raw) {
+      const oldKeys = ['morgan-ritual-v5','morgan-ritual-v3','morgan-ritual-v2','morgan-ritual-v1','morgan-ritual-bw-v1','morgan-finance-v1'];
+      for (const k of oldKeys) {
+        const old = localStorage.getItem(k);
+        if (old) { raw = old; break; }
+      }
+    }
+
     data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_DATA));
     if (!data.funds) data.funds = [];
     if (!data.logs) data.logs = [];
     if (!data.weeks) data.weeks = 4;
     curWeeks = data.weeks;
+
+    // Ensure default funds exist (add missing ones without overwriting existing)
+    const existingIds = data.funds.map(f => f.id);
+    DEFAULT_DATA.funds.forEach(df => {
+      if (!existingIds.includes(df.id)) data.funds.push({...df});
+    });
+
+    // Save to stable key immediately
+    localStorage.setItem(KEY, JSON.stringify(data));
   } catch { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} }
